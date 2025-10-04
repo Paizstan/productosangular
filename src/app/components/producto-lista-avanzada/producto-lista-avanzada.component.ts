@@ -18,11 +18,8 @@ interface SortConfig {
   template: `
     <div class="container">
       <div class="header">
-        <h2>Gestión Avanzada de Productos</h2>
+        <h2>Gestión de Productos</h2>
         <div class="header-actions">
-          <a class="btn btn-secondary" routerLink="/productos">
-            Vista Simple
-          </a>
           <button class="btn btn-primary" routerLink="/productos/nuevo">
             <i class="icon">+</i> Nuevo Producto
           </button>

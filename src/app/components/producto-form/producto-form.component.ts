@@ -49,24 +49,29 @@ import { NotificationService } from '../../services/notification.service';
 
           <div class="form-group">
             <label for="categoria">Categoría *</label>
-            <select
+            <input
+              type="text"
               id="categoria"
               formControlName="categoria"
               class="form-control"
-              [class.is-invalid]="isFieldInvalid('categoria')">
-              <option value="">Selecciona una categoría</option>
-              <option value="Electrónicos">Electrónicos</option>
-              <option value="Hogar">Hogar</option>
-              <option value="Ropa">Ropa</option>
-              <option value="Deportes">Deportes</option>
-              <option value="Libros">Libros</option>
-              <option value="Salud">Salud</option>
-              <option value="Automóvil">Automóvil</option>
-              <option value="Otros">Otros</option>
-            </select>
+              [class.is-invalid]="isFieldInvalid('categoria')"
+              placeholder="Escribe o selecciona una categoría"
+              list="categorias-list">
+            <datalist id="categorias-list">
+              <option *ngFor="let categoria of categorias" [value]="categoria">
+            </datalist>
+            <small class="form-text text-muted">
+              Puedes escribir una nueva categoría o seleccionar una existente
+            </small>
             <div class="invalid-feedback" *ngIf="isFieldInvalid('categoria')">
               <div *ngIf="productoForm.get('categoria')?.errors?.['required']">
                 La categoría es obligatoria
+              </div>
+              <div *ngIf="productoForm.get('categoria')?.errors?.['minlength']">
+                La categoría debe tener al menos 2 caracteres
+              </div>
+              <div *ngIf="productoForm.get('categoria')?.errors?.['maxlength']">
+                La categoría no debe exceder 50 caracteres
               </div>
             </div>
           </div>
@@ -323,6 +328,7 @@ export class ProductoFormComponent implements OnInit {
   isSubmitting = false;
   error: string | null = null;
   productoId: number | null = null;
+  categorias: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -337,7 +343,11 @@ export class ProductoFormComponent implements OnInit {
         Validators.minLength(2), 
         Validators.maxLength(100)
       ]],
-      categoria: ['', Validators.required],
+      categoria: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50)
+      ]],
       precio: ['', [
         Validators.required, 
         Validators.min(0.01), 
@@ -352,6 +362,9 @@ export class ProductoFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Cargar categorías disponibles
+    this.cargarCategorias();
+    
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
@@ -408,6 +421,23 @@ export class ProductoFormComponent implements OnInit {
     Object.keys(this.productoForm.controls).forEach(key => {
       const control = this.productoForm.get(key);
       control?.markAsTouched();
+    });
+  }
+
+  private cargarCategorias(): void {
+    this.productoService.getCategorias().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+        // Si no hay categorías en la BD, mostrar algunas sugerencias
+        if (this.categorias.length === 0) {
+          this.categorias = ['Electrónicos', 'Hogar', 'Ropa', 'Deportes', 'Libros', 'Salud', 'Automóvil'];
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        // Si hay error de conexión, mostrar categorías sugeridas
+        this.categorias = ['Electrónicos', 'Hogar', 'Ropa', 'Deportes', 'Libros', 'Salud', 'Automóvil'];
+      }
     });
   }
 }

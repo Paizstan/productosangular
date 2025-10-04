@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, map } from 'rxjs/operators';
 import { Producto, ProductoRequest } from '../models/producto.model';
 
 @Injectable({
@@ -44,6 +44,17 @@ export class ProductoService {
   deleteProducto(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`)
       .pipe(catchError(this.handleError));
+  }
+
+  // Obtener categorías únicas de todos los productos
+  getCategorias(): Observable<string[]> {
+    return this.getProductos().pipe(
+      map(productos => {
+        const categorias = productos.map(p => p.categoria);
+        return [...new Set(categorias)].sort(); // Eliminar duplicados y ordenar
+      }),
+      catchError(this.handleError)
+    );
   }
 
   // Manejo de errores
